@@ -16,8 +16,8 @@
         :nome="contact.nome"
         :email="contact.email"
         :telefone="contact.telefone"
-        @deleteContact="deleteContact(index)"
-        @editContact="editContact(index)"
+        @deleteContact="isDelete(index)"
+        @editContact="viewContact(index)"
       />
     </TableContact>
   </section>
@@ -33,29 +33,39 @@
         <p>{{ titleModal }}</p>
       </template>
       <template #body>
-        <form ref="form">
-          <div class="input-form">
-            <label for="nome">Nome</label>
-            <input type="text" name="nome" v-model="nome" />
-            <label for="email">E-mail</label>
-            <input type="email" name="email" v-model="email" />
-            <label for="telefone">Telefone</label>
-            <input
-              type="tel"
-              name="telefone"
-              v-model="telefone"
-              class="telefone"
-            />
-          </div>
-          <div class="buttons">
-            <button type="button" class="button-close" @click="closeModal">
-              Cancelar
-            </button>
-            <button id="btn-save" class="button-save" @click="saveContact">
-              {{ textButton }}
-            </button>
-          </div>
-        </form>
+        <section>
+          <form ref="form">
+            <div class="input-form" v-if="!this.delete">
+              <label for="nome">Nome</label>
+              <input type="text" name="nome" v-model="nome" />
+              <label for="email">E-mail</label>
+              <input type="email" name="email" v-model="email" />
+              <label for="telefone">Telefone</label>
+              <input
+                type="tel"
+                name="telefone"
+                v-model="telefone"
+                class="telefone"
+              />
+            </div>
+            <div v-else class="text-delete">
+              <p>Deseja realmente excluir o contato?</p>
+            </div>
+            <div class="buttons">
+              <button type="button" class="button-close" @click="closeModal">
+                Cancelar
+              </button>
+              <button
+                id="btn-save"
+                :class="isDisabled ? 'button-disabled' : 'button-save'"
+                @click="saveContact"
+                :disabled="isDisabled"
+              >
+                {{ textButton }}
+              </button>
+            </div>
+          </form>
+        </section>
       </template>
     </modal>
   </Teleport>
@@ -87,6 +97,7 @@ export default defineComponent({
     index: null,
     edit: false,
     delete: false,
+    disabled: false,
   }),
   computed: {
     textButton(): string {
@@ -95,12 +106,23 @@ export default defineComponent({
       } else return "Salvar";
     },
     titleModal(): string {
-      return "Criar contato";
+      if (this.delete) {
+        return "Excluir contato";
+      } else if (this.edit) {
+        return "Editar contato";
+      } else return "Criar contato";
+    },
+    isDisabled(): boolean {
+      if (this.nome === "" || this.email === "" || this.telefone === "") {
+        return true;
+      } else {
+        return false;
+      }
     },
   },
   methods: {
     closeModal() {
-      this.limparContato();
+      this.emptyContact();
       this.edit = false;
       this.delete = false;
       this.showModal = false;
@@ -115,31 +137,22 @@ export default defineComponent({
 
         localStorage.setItem("contact-list", JSON.stringify(this.contactsList));
       } else if (this.delete) {
-        this.remove();
+        this.deleteContact();
       } else if (this.edit) {
-        this.editar(index);
+        this.editContact(index);
       }
     },
-    viewContact(index: number) {
-      if (this.edit || this.delete) {
+    viewContact(index: any) {
+      this.showModal = true;
+      this.edit = true;
+      if (this.edit) {
+        this.index = index;
         this.nome = this.contactsList[index].nome;
         this.email = this.contactsList[index].email;
         this.telefone = this.contactsList[index].telefone;
       }
     },
     editContact(index: any) {
-      this.index = index;
-      this.showModal = true;
-      this.edit = true;
-      this.viewContact(index);
-    },
-    deleteContact(index: any) {
-      this.index = index;
-      this.showModal = true;
-      this.delete = true;
-      this.viewContact(index);
-    },
-    editar(index: any) {
       index = this.index;
       this.contactsList[index].nome = this.nome;
       this.contactsList[index].email = this.email;
@@ -147,11 +160,15 @@ export default defineComponent({
 
       localStorage.setItem("contact-list", JSON.stringify(this.contactsList));
     },
-    remove() {
+    isDelete(index: any) {
+      this.delete = true;
+      this.viewContact(index);
+    },
+    deleteContact() {
       this.contactsList.splice(this.index, 1);
       localStorage.setItem("contact-list", JSON.stringify(this.contactsList));
     },
-    limparContato() {
+    emptyContact() {
       (this.nome = ""), (this.email = ""), (this.telefone = "");
     },
   },
@@ -195,6 +212,11 @@ export default defineComponent({
   label {
     padding-top: 16px;
   }
+}
+
+.text-delete {
+  height: 92.5px;
+  padding: 19.5px 0 0 24px;
 }
 
 .telefone {
