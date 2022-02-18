@@ -16,8 +16,10 @@
         :nome="contact.nome"
         :email="contact.email"
         :telefone="contact.telefone"
+        :colorContact="contact.colorContact"
         @deleteContact="isDelete(index)"
         @editContact="viewContact(index)"
+        :highlight="highlight"
       />
     </TableContact>
   </section>
@@ -46,6 +48,7 @@
                 name="telefone"
                 v-model="telefone"
                 class="telefone"
+                v-maska="'(##) #####-####'"
               />
             </div>
             <div v-else class="text-delete">
@@ -58,7 +61,7 @@
               <button
                 id="btn-save"
                 :class="isDisabled ? 'button-disabled' : 'button-save'"
-                @click="saveContact"
+                @click.prevent="saveContact"
                 :disabled="isDisabled"
               >
                 {{ textButton }}
@@ -78,6 +81,7 @@ import { defineComponent } from "vue";
 import ContactList from "@/components/ContactList.vue";
 import TopBar from "@/components/TopBar.vue";
 import TableContact from "@/components/TableContact.vue";
+import { maska } from "maska";
 
 export default defineComponent({
   name: "Content",
@@ -88,16 +92,22 @@ export default defineComponent({
     TopBar,
     TableContact,
   },
+  directives: {
+    maska,
+  },
   data: () => ({
     showModal: false,
     contactsList: [] as any,
     nome: "",
     email: "",
     telefone: "",
-    index: null,
+    colorContact: {},
+    index: 0,
     edit: false,
     delete: false,
     disabled: false,
+    highlightBackground: {},
+    isHighlight: false,
   }),
   computed: {
     textButton(): string {
@@ -113,7 +123,7 @@ export default defineComponent({
       } else return "Criar contato";
     },
     isDisabled(): boolean {
-      if (this.nome === "" || this.email === "" || this.telefone === "") {
+      if (this.nome === "" && this.email === "" && this.telefone === "") {
         return true;
       } else {
         return false;
@@ -121,54 +131,82 @@ export default defineComponent({
     },
   },
   methods: {
-    closeModal() {
+    closeModal(): void {
       this.emptyContact();
       this.edit = false;
       this.delete = false;
       this.showModal = false;
     },
-    saveContact(index: any) {
-      if (!this.edit && !this.delete) {
+    saveContact(index: number): void {
+      this.showModal = false;
+      if (!this.edit || !this.delete) {
+        this.contactsList.map((contact: any) => {
+          contact.isHighlight = false;
+        });
         this.contactsList.push({
           nome: this.nome,
           email: this.email,
           telefone: this.telefone,
+          colorContact: {
+            backgroundColor:
+              "#" + Math.floor(Math.random() * 16777215).toString(16),
+          },
+          isHighlight: true,
         });
-
         localStorage.setItem("contact-list", JSON.stringify(this.contactsList));
+        this.emptyContact();
       } else if (this.delete) {
+        this.delete = false;
         this.deleteContact();
       } else if (this.edit) {
+        // this.edit = false;
         this.editContact(index);
       }
     },
-    viewContact(index: any) {
+    highlight(contact: any): void {
+      this.contactsList.findIndex((x: any) => {
+        x === contact;
+      });
+      if (this.contactsList[this.contactsList.length - 1].isHighlight) {
+        this.highlightBackground = { backgroundColor: "#fff3f2" };
+        setTimeout(() => {
+          this.highlightBackground = { backgroundColor: "#ffffff" };
+        }, 10000);
+      }
+    },
+    viewContact(index: any): void {
       this.showModal = true;
       this.edit = true;
-      if (this.edit) {
-        this.index = index;
+      this.index = index;
+      console.log(this.index);
+      if (this.edit || this.delete) {
         this.nome = this.contactsList[index].nome;
         this.email = this.contactsList[index].email;
         this.telefone = this.contactsList[index].telefone;
       }
     },
-    editContact(index: any) {
-      index = this.index;
+    editContact(index: any): void {
+      // index = this.index;
+      // console.log(index);
       this.contactsList[index].nome = this.nome;
       this.contactsList[index].email = this.email;
       this.contactsList[index].telefone = this.telefone;
+      console.log(this.contactsList);
 
       localStorage.setItem("contact-list", JSON.stringify(this.contactsList));
+
+      this.emptyContact();
     },
-    isDelete(index: any) {
+    isDelete(index: number): void {
       this.delete = true;
       this.viewContact(index);
     },
-    deleteContact() {
+    deleteContact(): void {
       this.contactsList.splice(this.index, 1);
       localStorage.setItem("contact-list", JSON.stringify(this.contactsList));
+      this.emptyContact();
     },
-    emptyContact() {
+    emptyContact(): void {
       (this.nome = ""), (this.email = ""), (this.telefone = "");
     },
   },
@@ -221,7 +259,7 @@ export default defineComponent({
 
 .telefone {
   margin-bottom: 22px;
-  width: 176px;
+  width: 128px;
 }
 
 .btn-topbar {

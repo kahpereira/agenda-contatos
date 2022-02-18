@@ -1,6 +1,8 @@
 <template>
-  <div class="info-contacts">
-    <p class="icon">{{ nome.charAt(0) }}</p>
+  <div class="info-contacts" :style="highlight">
+    <p class="icon" :style="colorContact">
+      {{ nome.charAt(0) }}
+    </p>
     <p>{{ nome }}</p>
     <p>{{ email }}</p>
     <p>{{ telefone }}</p>
@@ -39,8 +41,13 @@ export default defineComponent({
     telefone: {
       type: String,
     },
+    colorContact: {
+      type: Object,
+    },
+    highlight: {
+      type: Object,
+    },
   },
-  methods: {},
 });
 </script>
 
@@ -62,7 +69,6 @@ export default defineComponent({
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background-color: #fa8d68;
     color: #ffff;
     margin: 0 16px 0 8px;
     padding: 3px 5px 2px 6px;
