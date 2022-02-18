@@ -1,25 +1,31 @@
 <template>
   <section>
-    <TopBar>
+    <TopBar :isSearch="!contactList.length">
       <CreateButton
-        v-if="contactsList.length > 0"
         @click="showModal = true"
         class="btn-topbar"
+        v-if="contactList.length"
       />
+      <div v-if="contactList.length">
+        <input
+          class="busca"
+          type="text"
+          name="busca"
+          placeholder="Buscar..."
+          v-model="searchContact"
+        />
+      </div>
     </TopBar>
   </section>
-  <section v-if="contactsList.length">
+  <section v-if="contactList.length">
     <TableContact>
       <ContactList
-        v-for="(contact, index) in contactsList"
+        v-for="(contact, index) in filterContact"
         :key="index"
-        :nome="contact.nome"
-        :email="contact.email"
-        :telefone="contact.telefone"
-        :colorContact="contact.colorContact"
+        :contact="contact"
         @deleteContact="isDelete(index)"
         @editContact="viewContact(index)"
-        :highlight="highlight"
+        :list="contactList"
       />
     </TableContact>
   </section>
@@ -61,7 +67,7 @@
               <button
                 id="btn-save"
                 :class="isDisabled ? 'button-disabled' : 'button-save'"
-                @click.prevent="saveContact"
+                @click.prevent="submitButton"
                 :disabled="isDisabled"
               >
                 {{ textButton }}
@@ -97,7 +103,7 @@ export default defineComponent({
   },
   data: () => ({
     showModal: false,
-    contactsList: [] as any,
+    contactList: [] as any,
     nome: "",
     email: "",
     telefone: "",
@@ -108,6 +114,7 @@ export default defineComponent({
     disabled: false,
     highlightBackground: {},
     isHighlight: false,
+    searchContact: "",
   }),
   computed: {
     textButton(): string {
@@ -129,6 +136,18 @@ export default defineComponent({
         return false;
       }
     },
+    filterContact(): void {
+      if (this.searchContact) {
+        return this.contactList.filter((contact: any) => {
+          return this.searchContact
+            .toLowerCase()
+            .split(" ")
+            .every((v) => contact.nome.toLowerCase().includes(v));
+        });
+      } else {
+        return this.contactList;
+      }
+    },
   },
   methods: {
     closeModal(): void {
@@ -137,64 +156,54 @@ export default defineComponent({
       this.delete = false;
       this.showModal = false;
     },
-    saveContact(index: number): void {
+    submitButton(): void {
       this.showModal = false;
-      if (!this.edit || !this.delete) {
-        this.contactsList.map((contact: any) => {
-          contact.isHighlight = false;
-        });
-        this.contactsList.push({
-          nome: this.nome,
-          email: this.email,
-          telefone: this.telefone,
-          colorContact: {
-            backgroundColor:
-              "#" + Math.floor(Math.random() * 16777215).toString(16),
-          },
-          isHighlight: true,
-        });
-        localStorage.setItem("contact-list", JSON.stringify(this.contactsList));
-        this.emptyContact();
-      } else if (this.delete) {
+      if (this.delete) {
+        this.edit = false;
         this.delete = false;
         this.deleteContact();
       } else if (this.edit) {
-        // this.edit = false;
-        this.editContact(index);
+        this.delete = false;
+        this.edit = false;
+        this.editContact();
+      } else {
+        this.saveContact();
+        this.emptyContact();
       }
     },
-    highlight(contact: any): void {
-      this.contactsList.findIndex((x: any) => {
-        x === contact;
-      });
-      if (this.contactsList[this.contactsList.length - 1].isHighlight) {
-        this.highlightBackground = { backgroundColor: "#fff3f2" };
-        setTimeout(() => {
-          this.highlightBackground = { backgroundColor: "#ffffff" };
-        }, 10000);
-      }
-    },
-    viewContact(index: any): void {
+    viewContact(index: number): void {
       this.showModal = true;
       this.edit = true;
+      this.delete = true;
       this.index = index;
-      console.log(this.index);
       if (this.edit || this.delete) {
-        this.nome = this.contactsList[index].nome;
-        this.email = this.contactsList[index].email;
-        this.telefone = this.contactsList[index].telefone;
+        this.nome = this.contactList[index].nome;
+        this.email = this.contactList[index].email;
+        this.telefone = this.contactList[index].telefone;
       }
     },
-    editContact(index: any): void {
-      // index = this.index;
-      // console.log(index);
-      this.contactsList[index].nome = this.nome;
-      this.contactsList[index].email = this.email;
-      this.contactsList[index].telefone = this.telefone;
-      console.log(this.contactsList);
+    saveContact(): void {
+      this.contactList.map((contact: any) => {
+        contact.isHighlight = false;
+      });
+      this.contactList.push({
+        nome: this.nome,
+        email: this.email,
+        telefone: this.telefone,
+        colorContact: {
+          backgroundColor:
+            "#" + Math.floor(Math.random() * 16777215).toString(16),
+        },
+        isHighlight: true,
+      });
+      localStorage.setItem("contact-list", JSON.stringify(this.contactList));
+    },
+    editContact(): void {
+      this.contactList[this.index].nome = this.nome;
+      this.contactList[this.index].email = this.email;
+      this.contactList[this.index].telefone = this.telefone;
 
-      localStorage.setItem("contact-list", JSON.stringify(this.contactsList));
-
+      localStorage.setItem("contact-list", JSON.stringify(this.contactList));
       this.emptyContact();
     },
     isDelete(index: number): void {
@@ -202,8 +211,8 @@ export default defineComponent({
       this.viewContact(index);
     },
     deleteContact(): void {
-      this.contactsList.splice(this.index, 1);
-      localStorage.setItem("contact-list", JSON.stringify(this.contactsList));
+      this.contactList.splice(this.index, 1);
+      localStorage.setItem("contact-list", JSON.stringify(this.contactList));
       this.emptyContact();
     },
     emptyContact(): void {
@@ -213,13 +222,16 @@ export default defineComponent({
   created() {
     if (localStorage.getItem("contact-list")) {
       try {
-        this.contactsList = JSON.parse(
+        this.contactList = JSON.parse(
           localStorage.getItem("contact-list") || "",
         );
       } catch (e) {
         console.error("Erro");
       }
     }
+    this.contactList.forEach((contact: any) => {
+      contact.isHighlight = false;
+    });
   },
 });
 </script>

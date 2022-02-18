@@ -1,11 +1,11 @@
 <template>
-  <div class="info-contacts" :style="highlight">
-    <p class="icon" :style="colorContact">
-      {{ nome.charAt(0) }}
+  <div class="info-contacts" :style="highlightBackground">
+    <p class="icon" :style="contact.colorContact">
+      {{ contact.nome.charAt(0) }}
     </p>
-    <p>{{ nome }}</p>
-    <p>{{ email }}</p>
-    <p>{{ telefone }}</p>
+    <p>{{ contact.nome }}</p>
+    <p>{{ contact.email }}</p>
+    <p>{{ contact.telefone }}</p>
     <div class="buttons-contact">
       <button class="btn-edit" @click="this.$emit('editContact')">
         <img src="../assets/ic-edit.svg" alt="Editar" />
@@ -28,25 +28,30 @@ import { defineComponent } from "vue";
 export default defineComponent({
   name: "ContactList",
   emits: ["deleteContact", "editContact"],
+  data: () => ({
+    highlightBackground: { backgroundColor: "#ffffff" },
+  }),
   props: {
-    id: {
-      type: Number,
-    },
-    nome: {
-      type: String,
-    },
-    email: {
-      type: String,
-    },
-    telefone: {
-      type: String,
-    },
-    colorContact: {
+    contact: {
       type: Object,
     },
-    highlight: {
-      type: Object,
+    list: {
+      type: Array,
+      required: true,
     },
+  },
+  methods: {
+    checkBackgroundColor(): void {
+      if (this.contact?.isHighlight) {
+        this.highlightBackground = { backgroundColor: "#fff3f2" };
+        setTimeout(() => {
+          this.highlightBackground = { backgroundColor: "#ffffff" };
+        }, 10000);
+      }
+    },
+  },
+  created() {
+    this.checkBackgroundColor();
   },
 });
 </script>

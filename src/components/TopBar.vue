@@ -1,13 +1,17 @@
 <template>
-  <section class="top-bar">
+  <section :class="classDinamica">
     <div class="logo">
       <img src="../assets/ic-logo.svg" alt="Logo" />
     </div>
-    <div>
-      <slot />
-    </div>
-    <div class="busca">
-      <input type="search" name="busca" placeholder="Buscar..." />
+    <slot />
+    <div v-if="isSearch">
+      <input
+        class="busca"
+        type="text"
+        name="busca"
+        placeholder="Buscar..."
+        :disabled="isSearch"
+      />
     </div>
   </section>
 </template>
@@ -17,28 +21,31 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
   name: "TopBar",
+  props: {
+    isSearch: {
+      type: Boolean,
+    },
+  },
+  computed: {
+    classDinamica() {
+      return { topbar2: this.isSearch, topbar: !this.isSearch };
+    },
+  },
 });
 </script>
 
 <style lang="scss" scoped>
-.top-bar {
+.topbar {
   padding: 16px;
   display: grid;
   grid-template-columns: 2fr 1.5fr 10fr;
   align-items: center;
+}
 
-  .busca {
-    height: 32px;
-    padding: 7px 8px 6px;
-    border-radius: 4px;
-    background-color: var(--pale-grey);
-    background-image: url("../assets/ic-search.svg");
-    background-repeat: no-repeat;
-    background-position: right center;
-
-    input {
-      background-color: var(--pale-grey);
-    }
-  }
+.topbar2 {
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 2.5fr 10fr;
+  align-items: center;
 }
 </style>
