@@ -1,6 +1,20 @@
-# agenda-contatos
+<h1 align="center">Agenda de contatos 📕</h1>
 
-## Project setup
+<p align="center">Este projeto foi desenvolvido para realização de um processo seletivo, seguindo um protótipo enviado pela empresa.</p>
+
+---
+
+<a id="tecnologias"></a>
+### 🛠 Tecnologias:
+- [Vue.js](https://vuejs.org/)
+- [SASS](https://sass-lang.com/)
+- [TypeScript](https://www.typescriptlang.org/)
+
+---
+
+<a id="instalacao"></a>
+### ⚙ Instalação:
+
 ```
 yarn install
 ```
@@ -19,6 +33,7 @@ yarn build
 ```
 yarn lint
 ```
+
 
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
